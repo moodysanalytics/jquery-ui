@@ -70,10 +70,10 @@ function visible( element ) {
 		element = element.parent();
 		visibility = element.css( "visibility" );
 	}
-	return visibility !== "hidden";
+	return visibility === "visible";
 }
 
-$.extend( $.expr[ ":" ], {
+$.extend( $.expr.pseudos, {
 	focusable: function( element ) {
 		return $.ui.focusable( element, $.attr( element, "tabindex" ) != null );
 	}

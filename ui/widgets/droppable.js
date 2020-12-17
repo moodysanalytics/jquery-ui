@@ -57,7 +57,7 @@ $.widget( "ui.droppable", {
 		this.isover = false;
 		this.isout = true;
 
-		this.accept = $.isFunction( accept ) ? accept : function( d ) {
+		this.accept = typeof accept === "function" ? accept : function( d ) {
 			return d.is( accept );
 		};
 
@@ -109,7 +109,7 @@ $.widget( "ui.droppable", {
 	_setOption: function( key, value ) {
 
 		if ( key === "accept" ) {
-			this.accept = $.isFunction( value ) ? value : function( d ) {
+			this.accept = typeof value === "function" ? value : function( d ) {
 				return d.is( value );
 			};
 		} else if ( key === "scope" ) {
@@ -199,7 +199,7 @@ $.widget( "ui.droppable", {
 					inst.accept.call(
 						inst.element[ 0 ], ( draggable.currentItem || draggable.element )
 					) &&
-					intersect(
+					$.ui.intersect(
 						draggable,
 						$.extend( inst, { offset: inst.element.offset() } ),
 						inst.options.tolerance, event
@@ -253,7 +253,7 @@ $.widget( "ui.droppable", {
 	}
 } );
 
-var intersect = $.ui.intersect = ( function() {
+$.ui.intersect = ( function() {
 	function isOverAxis( x, reference, size ) {
 		return ( x >= reference ) && ( x < ( reference + size ) );
 	}
@@ -361,7 +361,7 @@ $.ui.ddmanager = {
 				return;
 			}
 			if ( !this.options.disabled && this.visible &&
-					intersect( draggable, this, this.options.tolerance, event ) ) {
+					$.ui.intersect( draggable, this, this.options.tolerance, event ) ) {
 				dropped = this._drop.call( this, event ) || dropped;
 			}
 
@@ -402,7 +402,7 @@ $.ui.ddmanager = {
 			}
 
 			var parentInstance, scope, parent,
-				intersects = intersect( draggable, this, this.options.tolerance, event ),
+				intersects = $.ui.intersect( draggable, this, this.options.tolerance, event ),
 				c = !intersects && this.isover ?
 					"isout" :
 					( intersects && !this.isover ? "isover" : null );

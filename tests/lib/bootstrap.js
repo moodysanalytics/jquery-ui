@@ -1,10 +1,13 @@
 ( function() {
 
+var DEFAULT_JQUERY_VERSION = "1.12.4";
+
 requirejs.config( {
 	paths: {
 		"globalize": "../../../external/globalize/globalize",
 		"globalize/ja-JP": "../../../external/globalize/globalize.culture.ja-JP",
 		"jquery": jqueryUrl(),
+		"jquery-migrate": migrateUrl(),
 		"jquery-simulate": "../../../external/jquery-simulate/jquery.simulate",
 		"jshint": "../../../external/jshint/jshint",
 		"lib": "../../lib",
@@ -57,11 +60,18 @@ function requireModules( dependencies, callback, modules ) {
 
 // Load a set of test file along with the required test infrastructure
 function requireTests( dependencies, noBackCompat ) {
-	dependencies = [
+	var preDependencies = [
 		"lib/qunit",
 		noBackCompat ? "jquery-no-back-compat" : "jquery",
 		"jquery-simulate"
-	].concat( dependencies );
+	];
+
+	// Load migrate before test files
+	if ( parseUrl().migrate ) {
+		preDependencies.push( "jquery-migrate" );
+	}
+
+	dependencies = preDependencies.concat( dependencies );
 
 	// Load the TestSwarm injector, if necessary
 	if ( parseUrl().swarmURL ) {
@@ -82,21 +92,46 @@ function parseUrl() {
 	var current;
 
 	for ( ; i < length; i++ ) {
-		current = parts[ i ].split( "=" );
-		data[ current[ 0 ] ] = current[ 1 ];
+		if ( parts[ i ].match( "=" ) ) {
+			current = parts[ i ].split( "=" );
+			data[ current[ 0 ] ] = current[ 1 ];
+		} else {
+			data[ parts[ i ] ] = true;
+		}
 	}
 
 	return data;
 }
 
 function jqueryUrl() {
-	var version = parseUrl().jquery;
+	var version = parseUrl().jquery || DEFAULT_JQUERY_VERSION;
 	var url;
 
-	if ( version === "git" ) {
-		url = "http://code.jquery.com/jquery-" + version;
+	if ( version === "git" || version === "3.x-git" ) {
+		url = "https://code.jquery.com/jquery-" + version;
 	} else {
-		url = "../../../external/jquery-" + ( version || "1.12.4" ) + "/jquery";
+		url = "../../../external/jquery-" + version + "/jquery";
+	}
+
+	return url;
+}
+
+function migrateUrl() {
+	var jqueryVersion = parseUrl().jquery || DEFAULT_JQUERY_VERSION;
+	var url;
+
+	if ( jqueryVersion === "git" ) {
+		url = "https://code.jquery.com/jquery-migrate-git";
+	} else if ( jqueryVersion[ 0 ] === "3" ) {
+		url = "../../../external/jquery-migrate-3.3.1/jquery-migrate";
+	} else if ( jqueryVersion[ 0 ] === "1" || jqueryVersion[ 0 ] === "2" ) {
+		url = "../../../external/jquery-migrate-1.4.1/jquery-migrate";
+	} else if ( jqueryVersion === "custom" ) {
+		if ( parseUrl().migrate ) {
+			throw new Error ( "Migrate not currently supported for custom build" );
+		}
+	} else {
+		throw new Error( "No migrate version known for jQuery " + jqueryVersion );
 	}
 
 	return url;
@@ -140,9 +175,12 @@ function jqueryUrl() {
 		}
 	}
 
-	// Load the jQuery 1.7 fixes, if necessary
-	if ( parseFloat( parseUrl().jquery ) === 1.7 ) {
-		modules.push( "ui/jquery-1-7" );
+	var jQueryVersion = parseUrl().jquery;
+
+	// Load the jQuery fixes, if necessary
+	if ( !jQueryVersion ||
+		( jQueryVersion.indexOf( "git" ) === -1 && parseFloat( jQueryVersion ) < 4 ) ) {
+		modules.unshift( "ui/jquery-patch" );
 	}
 
 	requireTests( modules, noBackCompat );

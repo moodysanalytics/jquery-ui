@@ -97,7 +97,7 @@ return $.widget( "ui.selectmenu", [ $.ui.formResetMixin, {
 		this.labels = this.element.labels().attr( "for", this.ids.button );
 		this._on( this.labels, {
 			click: function( event ) {
-				this.button.focus();
+				this.button.trigger( "focus" );
 				event.preventDefault();
 			}
 		} );
@@ -656,6 +656,10 @@ return $.widget( "ui.selectmenu", [ $.ui.formResetMixin, {
 		var that = this,
 			data = [];
 		options.each( function( index, item ) {
+			if ( item.hidden ) {
+				return;
+			}
+
 			data.push( that._parseOption( $( item ), index ) );
 		} );
 		this.items = data;

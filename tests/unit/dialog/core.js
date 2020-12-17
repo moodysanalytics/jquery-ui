@@ -1,11 +1,12 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"ui/widgets/dialog"
-], function( QUnit, $ ) {
+], function( QUnit, $, helper ) {
 
-// TODO add teardown callback to remove dialogs
-QUnit.module( "dialog: core" );
+// TODO add afterEach callback to remove dialogs
+QUnit.module( "dialog: core", { afterEach: helper.moduleAfterEach }  );
 
 QUnit.test( "markup structure", function( assert ) {
 	assert.expect( 11 );
@@ -118,7 +119,7 @@ QUnit.test( "focus tabbable", function( assert ) {
 
 	function step1() {
 		checkFocus( "<div><input><input></div>", options, function( done ) {
-			var input = element.find( "input:last" ).trigger( "focus" ).trigger( "blur" );
+			var input = element.find( "input" ).last().trigger( "focus" ).trigger( "blur" );
 			element.dialog( "instance" )._focusTabbable();
 			setTimeout( function() {
 				assert.equal( document.activeElement, input[ 0 ],

@@ -1,13 +1,15 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"ui/widgets/selectmenu"
-], function( QUnit, $ ) {
+], function( QUnit, $, helper ) {
 
 QUnit.module( "selectmenu: events", {
 	beforeEach: function() {
 		this.element = $( "#speed" );
-	}
+	},
+	afterEach: helper.moduleAfterEach
 } );
 
 QUnit.test( "change", function( assert ) {
@@ -89,9 +91,9 @@ QUnit.test( "focus", function( assert ) {
 		button.trigger( "click" );
 		links = menu.find( "li.ui-menu-item" );
 		optionIndex = 0;
-		links.eq( optionIndex ).simulate( "mouseover" );
+		links.eq( optionIndex ).simulate( "mouseover", { clientX: 2, clientY: 2 } );
 		optionIndex += 1;
-		links.eq( optionIndex ).simulate( "mouseover" );
+		links.eq( optionIndex ).simulate( "mouseover", { clientX: 3, clientY: 3 } );
 
 		// This tests for unwanted, additional focus event on close
 		that.element.selectmenu( "close" );

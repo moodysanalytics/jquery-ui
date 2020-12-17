@@ -289,7 +289,7 @@ $.widget( "ui.dialog", {
 			that._trigger( "focus" );
 		} );
 
-		// Track the dialog immediately upon openening in case a focus event
+		// Track the dialog immediately upon opening in case a focus event
 		// somehow occurs outside of the dialog before an element inside the
 		// dialog is focused (#10152)
 		this._makeFocusTarget();
@@ -369,8 +369,8 @@ $.widget( "ui.dialog", {
 					return;
 				}
 				var tabbables = this.uiDialog.find( ":tabbable" ),
-					first = tabbables.filter( ":first" ),
-					last = tabbables.filter( ":last" );
+					first = tabbables.first(),
+					last = tabbables.last();
 
 				if ( ( event.target === last[ 0 ] || event.target === this.uiDialog[ 0 ] ) &&
 						!event.shiftKey ) {
@@ -481,14 +481,14 @@ $.widget( "ui.dialog", {
 		this.uiDialogButtonPane.remove();
 		this.uiButtonSet.empty();
 
-		if ( $.isEmptyObject( buttons ) || ( $.isArray( buttons ) && !buttons.length ) ) {
+		if ( $.isEmptyObject( buttons ) || ( Array.isArray( buttons ) && !buttons.length ) ) {
 			this._removeClass( this.uiDialog, "ui-dialog-buttons" );
 			return;
 		}
 
 		$.each( buttons, function( name, props ) {
 			var click, buttonOptions;
-			props = $.isFunction( props ) ?
+			props = typeof props === "function" ?
 				{ click: props, text: name } :
 				props;
 
@@ -863,20 +863,19 @@ $.widget( "ui.dialog", {
 		if ( !this.document.data( "ui-dialog-overlays" ) ) {
 
 			// Prevent use of anchors and inputs
-			// Using _on() for an event handler shared across many instances is
-			// safe because the dialogs stack and must be closed in reverse order
-			this._on( this.document, {
-				focusin: function( event ) {
-					if ( isOpening ) {
-						return;
-					}
-
-					if ( !this._allowInteraction( event ) ) {
-						event.preventDefault();
-						this._trackingInstances()[ 0 ]._focusTabbable();
-					}
+			// This doesn't use `_on()` because it is a shared event handler
+			// across all open modal dialogs.
+			this.document.on( "focusin.ui-dialog", function( event ) {
+				if ( isOpening ) {
+					return;
 				}
-			} );
+
+				var instance = this._trackingInstances()[ 0 ];
+				if ( !instance._allowInteraction( event ) ) {
+					event.preventDefault();
+					instance._focusTabbable();
+				}
+			}.bind( this ) );
 		}
 
 		this.overlay = $( "<div>" )
@@ -899,7 +898,7 @@ $.widget( "ui.dialog", {
 			var overlays = this.document.data( "ui-dialog-overlays" ) - 1;
 
 			if ( !overlays ) {
-				this._off( this.document, "focusin" );
+				this.document.off( "focusin.ui-dialog" );
 				this.document.removeData( "ui-dialog-overlays" );
 			} else {
 				this.document.data( "ui-dialog-overlays", overlays );

@@ -1,10 +1,11 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"ui/widgets/selectmenu"
-], function( QUnit, $ ) {
+], function( QUnit, $, helper ) {
 
-QUnit.module( "selectmenu: core" );
+QUnit.module( "selectmenu: core", { afterEach: helper.moduleAfterEach }  );
 
 QUnit.test( "markup structure", function( assert ) {
 	assert.expect( 7 );
@@ -95,7 +96,7 @@ QUnit.test( "_renderButtonItem()", function( assert ) {
 	element.selectmenu( "refresh" );
 	option = element.find( "option:selected" );
 	assert.equal(
-		$.trim( button.text() ),
+		String.prototype.trim.call( button.text() ),
 		option.text() + element[ 0 ].selectedIndex,
 		"refresh: button item text"
 	);
@@ -104,7 +105,7 @@ QUnit.test( "_renderButtonItem()", function( assert ) {
 	menu.find( "li" ).last().simulate( "mouseover" ).trigger( "click" );
 	option = element.find( "option" ).last();
 	assert.equal(
-		$.trim( button.text() ),
+		String.prototype.trim.call( button.text() ),
 		option.text() + element[ 0 ].selectedIndex,
 		"click: button item text"
 	);
@@ -153,7 +154,7 @@ $.each( [
 				selected.val(),
 				"original select state"
 			);
-			assert.equal( $.trim( button.text() ), selected.text(), "button text" );
+			assert.equal( String.prototype.trim.call( button.text() ), selected.text(), "button text" );
 			ready();
 		} );
 	} );
@@ -189,7 +190,7 @@ $.each( [
 				selected.val(),
 				"original select state"
 			);
-			assert.equal( $.trim( button.text() ), selected.text(), "button text" );
+			assert.equal( String.prototype.trim.call( button.text() ), selected.text(), "button text" );
 			ready();
 		}, 1 );
 	} );
@@ -231,7 +232,7 @@ $.each( [
 					"button aria-activedescendant" );
 				assert.equal( element.find( "option:selected" ).val(), options.eq( 1 ).val(),
 					"original select state" );
-				assert.equal( $.trim( button.text() ), options.eq( 1 ).text(), "button text" );
+				assert.equal( String.prototype.trim.call( button.text() ), options.eq( 1 ).text(), "button text" );
 				ready();
 			} );
 		} );
@@ -251,13 +252,13 @@ $.each( [
 			wrappers = menu.find( "li.ui-menu-item .ui-menu-item-wrapper" );
 
 			button.trigger( "click" );
-			wrappers.first().simulate( "mouseover" ).trigger( "click" );
+			wrappers.first().simulate( "mouseover", { clientX: 2, clientY: 2 } ).trigger( "click" );
 			assert.equal( element[ 0 ].selectedIndex, 0, "First item is selected" );
 			button.simulate( "keydown", { keyCode: $.ui.keyCode.UP } );
 			assert.equal( element[ 0 ].selectedIndex, 0, "No looping beyond first item" );
 
 			button.trigger( "click" );
-			wrappers.last().simulate( "mouseover" ).trigger( "click" );
+			wrappers.last().simulate( "mouseover", { clientX: 3, clientY: 3 } ).trigger( "click" );
 			assert.equal( element[ 0 ].selectedIndex, wrappers.length - 1, "Last item is selected" );
 			button.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
 			assert.equal( element[ 0 ].selectedIndex, wrappers.length - 1, "No looping behind last item" );
@@ -352,10 +353,10 @@ QUnit.test( "Selectmenu should reset when its parent form resets", function( ass
 
 	element.val( "Slower" );
 	element.selectmenu( "refresh" );
-	assert.equal( $.trim( widget.text() ), "Slower" );
+	assert.equal( String.prototype.trim.call( widget.text() ), "Slower" );
 	form[ 0 ].reset();
 	setTimeout( function() {
-		assert.equal( $.trim( widget.text() ), initialValue );
+		assert.equal( String.prototype.trim.call( widget.text() ), initialValue );
 		ready();
 	} );
 } );
@@ -372,6 +373,32 @@ QUnit.test( "Number pad input should change value", function( assert ) {
 
 	setTimeout( function() {
 		assert.equal( element.val(), 5 );
+		ready();
+	} );
+} );
+
+QUnit.test( "Options with hidden attribute should not be rendered", function( assert ) {
+	var ready = assert.async();
+	assert.expect( 1 );
+
+	var button, menu, options,
+		element = $( "#speed" );
+
+	element.find( "option" ).eq( 1 ).prop( "hidden", true );
+	element.selectmenu();
+	button = element.selectmenu( "widget" );
+	menu = element.selectmenu( "menuWidget" );
+
+	button.simulate( "focus" );
+	setTimeout( function() {
+		button.trigger( "click" );
+		options = menu.children()
+			.map( function() {
+				return $( this ).text();
+			} )
+			.get();
+		assert.deepEqual( options, [ "Slower", "Medium", "Fast", "Faster" ], "correct elements" );
+
 		ready();
 	} );
 } );

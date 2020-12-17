@@ -2,12 +2,13 @@ define( [
 	"qunit",
 	"jquery",
 	"lib/common",
+	"lib/helper",
 	"ui/form",
 	"ui/labels",
 	"ui/unique-id"
-], function( QUnit, $, common ) {
+], function( QUnit, $, common, helper ) {
 
-QUnit.module( "core - jQuery extensions" );
+QUnit.module( "core - jQuery extensions", { afterEach: helper.moduleAfterEach }  );
 
 common.testJshint( "core" );
 
@@ -142,7 +143,7 @@ QUnit.test( "uniqueId / removeUniqueId", function( assert ) {
 } );
 
 QUnit.test( "Labels", function( assert ) {
-	assert.expect( 2 );
+	assert.expect( 3 );
 
 	var expected = [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" ];
 	var dom = $( "#labels-fragment" );
@@ -152,8 +153,9 @@ QUnit.test( "Labels", function( assert ) {
 		var found = labels.map( function() {
 
 				// Support: Core 1.9 Only
-				// We use $.trim() because core 1.9.x silently fails when white space is present
-				return $.trim( $( this ).text() );
+				// We use String.prototype.trim because core 1.9.x silently fails
+				// when white space is present
+				return String.prototype.trim.call( $( this ).text() );
 			} ).get();
 
 		assert.deepEqual( found, expected,
@@ -165,6 +167,8 @@ QUnit.test( "Labels", function( assert ) {
 	// Detach the dom to test on a fragment
 	dom.detach();
 	testLabels( "document fragments" );
+
+	assert.equal( $().labels().length, 0, "No element" );
 } );
 
 ( function() {
@@ -180,7 +184,7 @@ QUnit.test( "Labels", function( assert ) {
 			QUnit.test( name + this.id.replace( /_/g, " " ), function( assert ) {
 				var ready = assert.async();
 				assert.expect( 1 );
-				var form = input.form();
+				var form = input._form();
 
 				// If input has a form the value should reset to "" if not it should be "changed"
 				var value = form.length ? "" : "changed";

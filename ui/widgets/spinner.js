@@ -35,7 +35,7 @@
 	}
 }( function( $ ) {
 
-function spinnerModifer( fn ) {
+function spinnerModifier( fn ) {
 	return function() {
 		var previous = this.element.val();
 		fn.apply( this, arguments );
@@ -140,9 +140,13 @@ $.widget( "ui.spinner", {
 			}
 		},
 		mousewheel: function( event, delta ) {
-			if ( !delta ) {
+			var activeElement = $.ui.safeActiveElement( this.document[ 0 ] );
+			var isActive = this.element[ 0 ] === activeElement;
+
+			if ( !isActive || !delta ) {
 				return;
 			}
+
 			if ( !this.spinning && !this._start( event ) ) {
 				return false;
 			}
@@ -340,7 +344,7 @@ $.widget( "ui.spinner", {
 		var incremental = this.options.incremental;
 
 		if ( incremental ) {
-			return $.isFunction( incremental ) ?
+			return typeof incremental === "function" ?
 				incremental( i ) :
 				Math.floor( i * i * i / 50000 - i * i / 500 + 17 * i / 200 + 1 );
 		}
@@ -438,7 +442,7 @@ $.widget( "ui.spinner", {
 		this.buttons.button( value ? "disable" : "enable" );
 	},
 
-	_setOptions: spinnerModifer( function( options ) {
+	_setOptions: spinnerModifier( function( options ) {
 		this._super( options );
 	} ),
 
@@ -505,7 +509,7 @@ $.widget( "ui.spinner", {
 		this.uiSpinner.replaceWith( this.element );
 	},
 
-	stepUp: spinnerModifer( function( steps ) {
+	stepUp: spinnerModifier( function( steps ) {
 		this._stepUp( steps );
 	} ),
 	_stepUp: function( steps ) {
@@ -515,7 +519,7 @@ $.widget( "ui.spinner", {
 		}
 	},
 
-	stepDown: spinnerModifer( function( steps ) {
+	stepDown: spinnerModifier( function( steps ) {
 		this._stepDown( steps );
 	} ),
 	_stepDown: function( steps ) {
@@ -525,11 +529,11 @@ $.widget( "ui.spinner", {
 		}
 	},
 
-	pageUp: spinnerModifer( function( pages ) {
+	pageUp: spinnerModifier( function( pages ) {
 		this._stepUp( ( pages || 1 ) * this.options.page );
 	} ),
 
-	pageDown: spinnerModifer( function( pages ) {
+	pageDown: spinnerModifier( function( pages ) {
 		this._stepDown( ( pages || 1 ) * this.options.page );
 	} ),
 
@@ -537,7 +541,7 @@ $.widget( "ui.spinner", {
 		if ( !arguments.length ) {
 			return this._parse( this.element.val() );
 		}
-		spinnerModifer( this._value ).call( this, newVal );
+		spinnerModifier( this._value ).call( this, newVal );
 	},
 
 	widget: function() {

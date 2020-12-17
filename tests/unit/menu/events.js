@@ -1,9 +1,10 @@
 define( [
 	"qunit",
 	"jquery",
+	"lib/helper",
 	"./helper",
 	"ui/widgets/menu"
-], function( QUnit, $, testHelper ) {
+], function( QUnit, $, helper, testHelper ) {
 
 var log = testHelper.log,
 	logOutput = testHelper.logOutput,
@@ -12,7 +13,8 @@ var log = testHelper.log,
 QUnit.module( "menu: events", {
 	beforeEach: function() {
 		testHelper.clearLog();
-	}
+	},
+	afterEach: helper.moduleAfterEach
 } );
 
 QUnit.test( "handle click on menu", function( assert ) {
@@ -176,12 +178,12 @@ QUnit.test( "handle submenu auto collapse: mouseleave, default markup", function
 
 	function menumouseleave1() {
 		assert.equal( element.find( "ul[aria-expanded='true']" ).length, 1, "first submenu expanded" );
-		element.menu( "focus", event, element.find( "li:nth-child(7) li:first" ) );
+		element.menu( "focus", event, element.find( "li:nth-child(7) li" ).first() );
 		setTimeout( menumouseleave2, 25 );
 	}
 	function menumouseleave2() {
 		assert.equal( element.find( "ul[aria-expanded='true']" ).length, 2, "second submenu expanded" );
-		element.find( "ul[aria-expanded='true']:first" ).trigger( "mouseleave" );
+		element.find( "ul[aria-expanded='true']" ).first().trigger( "mouseleave" );
 		setTimeout( menumouseleave3, 25 );
 	}
 	function menumouseleave3() {
@@ -213,7 +215,7 @@ QUnit.test( "handle submenu auto collapse: mouseleave, custom markup", function(
 	}
 	function menumouseleave2() {
 		assert.equal( element.find( "div[aria-expanded='true']" ).length, 2, "second submenu expanded" );
-		element.find( "div[aria-expanded='true']:first" ).trigger( "mouseleave" );
+		element.find( "div[aria-expanded='true']" ).first().trigger( "mouseleave" );
 		setTimeout( menumouseleave3, 25 );
 	}
 	function menumouseleave3() {
@@ -306,7 +308,7 @@ QUnit.test( "handle keyboard navigation on menu without scroll and with submenus
 			log( $( ui.item[ 0 ] ).text() );
 		},
 		focus: function( event ) {
-			log( $( event.target ).find( ".ui-menu-item-wrapper.ui-state-active:last" ).parent().index() );
+			log( $( event.target ).find( ".ui-menu-item-wrapper.ui-state-active" ).last().parent().index() );
 		}
 	} );
 
@@ -427,7 +429,7 @@ QUnit.test( "handle keyboard navigation on menu with scroll and without submenus
 			log( $( ui.item[ 0 ] ).text() );
 		},
 		focus: function( event ) {
-			log( $( event.target ).find( ".ui-menu-item-wrapper.ui-state-active:last" ).parent().index() );
+			log( $( event.target ).find( ".ui-menu-item-wrapper.ui-state-active" ).last().parent().index() );
 		}
 	} );
 
@@ -503,7 +505,7 @@ QUnit.test( "handle keyboard navigation on menu with scroll and with submenus", 
 			log( $( ui.item[ 0 ] ).text() );
 		},
 		focus: function( event ) {
-			log( $( event.target ).find( ".ui-menu-item-wrapper.ui-state-active:last" ).parent().index() );
+			log( $( event.target ).find( ".ui-menu-item-wrapper.ui-state-active" ).last().parent().index() );
 		}
 	} );
 
@@ -670,7 +672,9 @@ QUnit.test( "handle keyboard navigation and mouse click on menu with dividers an
 		element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
 		element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
 		element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
-		assert.equal( logOutput(), "keydown,3,4,7", "Keydown focus skips divider and group label" );
+		element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
+		element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
+		assert.equal( logOutput(), "keydown,1,2,3,4,7", "Keydown focus skips divider and group label" );
 		ready();
 	}
 } );
@@ -751,6 +755,28 @@ QUnit.test( "#10571: When typing in a menu, only menu-items should be focused", 
 
 	setTimeout( function() {
 		element.menu( "widget" ).simulate( "keydown", { keyCode: "-".charCodeAt( 0 ) } );
+		ready();
+	} );
+} );
+
+QUnit.test( "#15157: Must not focus menu dividers with the keyboard", function( assert ) {
+	var ready = assert.async();
+	assert.expect( 6 );
+
+	var element = $( "#menu-with-dividers" ).menu( {
+		focus: function( event, ui ) {
+			assert.hasClasses( ui.item, "ui-menu-item", "Should have menu item class" );
+			log( ui.item.text() );
+		}
+	} );
+
+	element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
+	element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
+	element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
+	element.simulate( "keydown", { keyCode: $.ui.keyCode.DOWN } );
+	element.simulate( "keydown", { keyCode: $.ui.keyCode.UP } );
+	setTimeout( function() {
+		assert.equal( logOutput(), "beginning,middle,end,beginning,end", "Should wrap around items" );
 		ready();
 	} );
 } );
