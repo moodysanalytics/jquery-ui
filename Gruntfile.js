@@ -138,6 +138,24 @@ module.exports = function (grunt) {
 				src: cssFiles,
 				dest: "dist/jquery-ui.css"
 			}
+		}
+	},
+	eslint:{
+		options: {
+			configFile: "eslint.json"
+		},
+		target:["demos/**/*.js", "build/**/*.js", "ui/**/*.js"]
+	},
+	uglify: minify,
+	htmllint: {
+		good: {
+			options: {
+				ignore: [
+				/The text content of element “script” was not in the required format: Expected space, tab, newline, or slash but found “.” instead/
+			] },
+			src: glob.sync("{demos,tests}/**/*.html", {
+				ignore: htmllintBad
+			} )
 		},
 		requirejs: {
 			js: {
@@ -157,25 +175,6 @@ module.exports = function (grunt) {
 					wrap: {
 						start: createBanner(uiFiles)
 					}
-				}
-			}
-		},
-		jscs: {
-			ui: {
-				options: {
-					config: true
-				},
-				files: {
-					src: ["demos/**/*.js", "build/**/*.js", "ui/**/*.js"]
-				}
-			},
-			tests: {
-				options: {
-					config: true,
-					maximumLineLength: null
-				},
-				files: {
-					src: ["tests/**/*.js"]
 				}
 			}
 		},
@@ -271,7 +270,7 @@ module.exports = function (grunt) {
 				grunt.log.error(error);
 				return done(false);
 			}
-
+      
 			authors = authors.map(function (author) {
 				if (author.match(/^Jacek Jędrzejewski </)) {
 					return "Jacek Jędrzejewski (http://jacek.jedrzejewski.name)";
@@ -293,7 +292,7 @@ module.exports = function (grunt) {
 	grunt.registerTask("default", ["requirejs", "build"]);
 
 	grunt.registerTask("jenkins", ["default"]);
-	grunt.registerTask("lint", ["asciilint", "jshint", "jscs", "csslint", "htmllint"]);
+	grunt.registerTask("lint", ["asciilint", "jshint", "eslint", "csslint", "htmllint"]);
 	grunt.registerTask("test", ["qunit"]);
 	grunt.registerTask("build", ["sass", "concat"]);
 	grunt.registerTask("sizer", ["requirejs:js", "uglify:main", "compare_size:all"]);
